@@ -1,0 +1,1 @@
+/home/jk/work/paper/VisiPruner/scripts/convert_vqav2_for_submission.py

@@ -1,0 +1,248 @@
+{
+  "results": {
+    "pope": {
+      "alias": "pope",
+      "pope_accuracy,none": 0.8772222222222222,
+      "pope_accuracy_stderr,none": "N/A",
+      "pope_accuracy_stderr_clt,none": 0.0034595337424354264,
+      "pope_accuracy_stderr_clustered,none": "N/A",
+      "pope_precision,none": 0.9621562755240948,
+      "pope_precision_stderr,none": "N/A",
+      "pope_precision_stderr_clt,none": 0.0034595337424354264,
+      "pope_precision_stderr_clustered,none": "N/A",
+      "pope_recall,none": 0.7853333333333333,
+      "pope_recall_stderr,none": "N/A",
+      "pope_recall_stderr_clt,none": 0.0034595337424354264,
+      "pope_recall_stderr_clustered,none": "N/A",
+      "pope_f1_score,none": 0.8647987275174355,
+      "pope_f1_score_stderr,none": "N/A",
+      "pope_f1_score_stderr_clt,none": 0.0034595337424354264,
+      "pope_f1_score_stderr_clustered,none": "N/A",
+      "pope_yes_ratio,none": 0.5,
+      "pope_yes_ratio_stderr,none": "N/A",
+      "pope_yes_ratio_stderr_clt,none": 0.0034595337424354264,
+      "pope_yes_ratio_stderr_clustered,none": "N/A"
+    }
+  },
+  "group_subtasks": {
+    "pope": []
+  },
+  "configs": {
+    "pope": {
+      "task": "pope",
+      "dataset_path": "lmms-lab/POPE",
+      "dataset_kwargs": {
+        "token": true
+      },
+      "test_split": "test",
+      "full_docs": false,
+      "process_results_use_image": false,
+      "doc_to_visual": "<function pope_doc_to_visual at 0x70420e75f370>",
+      "doc_to_text": "<function pope_doc_to_text at 0x70420dde7f40>",
+      "doc_to_target": "answer",
+      "process_results": "<function pope_process_results at 0x70420da485e0>",
+      "description": "",
+      "target_delimiter": " ",
+      "fewshot_delimiter": "\n\n",
+      "num_fewshot": 0,
+      "metric_list": [
+        {
+          "metric": "pope_accuracy",
+          "aggregation": "<function pope_aggregate_accuracy at 0x70420da48c10>",
+          "higher_is_better": true
+        },
+        {
+          "metric": "pope_precision",
+          "aggregation": "<function pope_aggregate_precision at 0x70420da49240>",
+          "higher_is_better": true
+        },
+        {
+          "metric": "pope_recall",
+          "aggregation": "<function pope_aggregate_recall at 0x70420da49870>",
+          "higher_is_better": true
+        },
+        {
+          "metric": "pope_f1_score",
+          "aggregation": "<function pope_aggregate_f1_score at 0x70420da49ea0>",
+          "higher_is_better": true
+        },
+        {
+          "metric": "pope_yes_ratio",
+          "aggregation": "<function pope_aggregate_yes_ratio at 0x70420da4a4d0>",
+          "higher_is_better": true
+        }
+      ],
+      "output_type": "generate_until",
+      "generation_kwargs": {
+        "max_new_tokens": 128,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "num_beams": 1,
+        "do_sample": false,
+        "until": [
+          "\n\n"
+        ]
+      },
+      "repeats": 1,
+      "should_decontaminate": false,
+      "score_key": "score",
+      "metadata": [
+        {
+          "version": 0.0
+        }
+      ],
+      "lmms_eval_specific_kwargs": {
+        "default": {
+          "pre_prompt": "",
+          "post_prompt": "\nAnswer the question using a single word or phrase."
+        },
+        "plm": {
+          "pre_prompt": "",
+          "post_prompt": "\nYour response must be concise."
+        },
+        "pre_prompt": "",
+        "post_prompt": "\nAnswer the question using a single word or phrase."
+      }
+    }
+  },
+  "versions": {
+    "pope": "Yaml"
+  },
+  "n-shot": {
+    "pope": 0
+  },
+  "higher_is_better": {
+    "pope": {
+      "pope_accuracy": true,
+      "pope_precision": true,
+      "pope_recall": true,
+      "pope_f1_score": true,
+      "pope_yes_ratio": true
+    }
+  },
+  "n-samples": {
+    "pope": {
+      "original": 9000,
+      "effective": 9000
+    }
+  },
+  "config": {
+    "model": "qwen2_5_vl",
+    "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+    "batch_size": "1",
+    "batch_sizes": [],
+    "device": null,
+    "use_cache": null,
+    "limit": null,
+    "offset": 0,
+    "bootstrap_iters": 100000,
+    "gen_kwargs": "",
+    "random_seed": 0,
+    "numpy_seed": 1234,
+    "torch_seed": 1234,
+    "fewshot_seed": 1234,
+    "resolved_cli_args": {
+      "config": "",
+      "model": "qwen2_5_vl",
+      "tasks": "pope",
+      "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+      "launcher_args": null,
+      "num_fewshot": null,
+      "batch_size": "1",
+      "max_batch_size": null,
+      "device": null,
+      "output_path": "/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k192_rho0.5_lambda0.5",
+      "limit": null,
+      "offset": 0,
+      "use_cache": null,
+      "cache_requests": null,
+      "check_integrity": false,
+      "write_out": false,
+      "log_samples": true,
+      "wandb_log_samples": false,
+      "log_samples_suffix": "model_outputs",
+      "system_instruction": null,
+      "apply_chat_template": false,
+      "fewshot_as_multiturn": false,
+      "show_config": false,
+      "include_path": null,
+      "gen_kwargs": "",
+      "reasoning_tags": "[[\"<think>\", \"</think>\"], [\"<analysis>\", \"</analysis>\"]]",
+      "verbosity": "INFO",
+      "wandb_args": "",
+      "timezone": "Asia/Singapore",
+      "hf_hub_log_args": ",output_path=/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k192_rho0.5_lambda0.5",
+      "predict_only": false,
+      "seed": [
+        0,
+        1234,
+        1234,
+        1234
+      ],
+      "trust_remote_code": false,
+      "process_with_media": false,
+      "agentic_trace_mode": "basic",
+      "force_simple": false,
+      "tui": false,
+      "repeats": 1,
+      "baseline": null,
+      "max_tokens": null,
+      "power_analysis": false,
+      "effect_size": 0.03,
+      "alpha": 0.05,
+      "power": 0.8,
+      "correlation": 0.5,
+      "std_a": null,
+      "std_b": null
+    }
+  },
+  "git_hash": "8f86b55",
+  "git_branch": "main",
+  "lmms_eval_version": "main@8f86b55",
+  "date": "20260717_220744",
+  "throughput": {
+    "total_gen_tokens": 2250,
+    "total_elapsed_time": 288.4841163158417,
+    "avg_speed": 7.799389542600077,
+    "avg_rank": 0.0
+  },
+  "usage": {},
+  "efficiency": {
+    "by_task": {
+      "pope": {
+        "docs": 9000.0,
+        "docs_with_token_counts": 9000.0,
+        "total_input_tokens": 0.0,
+        "total_output_tokens": 18000.0,
+        "total_tokens": 18000.0,
+        "total_correct_score": 7895.0,
+        "avg_output_tokens_per_sample": 2.0,
+        "tokens_per_correct_answer": 2.279924002533249
+      }
+    },
+    "overall": {
+      "docs": 9000.0,
+      "docs_with_token_counts": 9000.0,
+      "total_input_tokens": 0.0,
+      "total_output_tokens": 18000.0,
+      "total_tokens": 18000.0,
+      "total_correct_score": 7895.0,
+      "avg_output_tokens_per_sample": 2.0,
+      "tokens_per_correct_answer": 2.279924002533249
+    }
+  },
+  "task_hashes": {
+    "pope": "60c35fa4f4c9d5fcbfb62ea39da88a709d0396cf53ddb30fbfff08a6c0179f97"
+  },
+  "model_source": "qwen2_5_vl",
+  "model_name": "/home/jk/models/qwen2.5-vl-7b",
+  "model_name_sanitized": "models__qwen2.5-vl-7b",
+  "system_instruction": null,
+  "system_instruction_sha": null,
+  "fewshot_as_multiturn": false,
+  "chat_template": null,
+  "chat_template_sha": null,
+  "start_time": 40154.921327793,
+  "end_time": 40474.360653998,
+  "total_evaluation_time_seconds": "319.4393262049998"
+}

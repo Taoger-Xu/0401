@@ -1,0 +1,200 @@
+{
+  "results": {
+    "vizwiz_vqa_val": {
+      "alias": "vizwiz_vqa_val",
+      "exact_match,none": 0.6213475341514247,
+      "exact_match_stderr,none": 0.006673530638028268,
+      "exact_match_stderr_clt,none": 0.006673530638028202,
+      "exact_match_stderr_clustered,none": "N/A",
+      "submission,none": [],
+      "submission_stderr,none": []
+    }
+  },
+  "group_subtasks": {
+    "vizwiz_vqa_val": []
+  },
+  "configs": {
+    "vizwiz_vqa_val": {
+      "task": "vizwiz_vqa_val",
+      "dataset_path": "lmms-lab/VizWiz-VQA",
+      "test_split": "val",
+      "full_docs": false,
+      "process_results_use_image": false,
+      "doc_to_visual": "<function vizwiz_vqa_doc_to_visual at 0x7d2c05b5c310>",
+      "doc_to_text": "<function vizwiz_vqa_doc_to_text at 0x7d2c05b5cd30>",
+      "doc_to_target": "answer",
+      "process_results": "<function vizwiz_vqa_process_results at 0x7d2c05b5d000>",
+      "description": "",
+      "target_delimiter": " ",
+      "fewshot_delimiter": "\n\n",
+      "num_fewshot": 0,
+      "metric_list": [
+        {
+          "metric": "exact_match",
+          "aggregation": "mean",
+          "higher_is_better": true,
+          "ignore_case": true,
+          "ignore_punctuation": true
+        }
+      ],
+      "output_type": "generate_until",
+      "generation_kwargs": {
+        "until": [
+          "ASSISTANT:"
+        ]
+      },
+      "repeats": 1,
+      "should_decontaminate": false,
+      "score_key": "score",
+      "metadata": [
+        {
+          "version": 0.0
+        }
+      ],
+      "lmms_eval_specific_kwargs": {
+        "default": {
+          "pre_prompt": "",
+          "post_prompt": "\nWhen the provided information is insufficient, respond with 'Unanswerable'.\nAnswer the question using a single word or phrase."
+        },
+        "pre_prompt": "",
+        "post_prompt": "\nWhen the provided information is insufficient, respond with 'Unanswerable'.\nAnswer the question using a single word or phrase."
+      }
+    }
+  },
+  "versions": {
+    "vizwiz_vqa_val": "Yaml"
+  },
+  "n-shot": {
+    "vizwiz_vqa_val": 0
+  },
+  "higher_is_better": {
+    "vizwiz_vqa_val": {
+      "exact_match": true
+    }
+  },
+  "n-samples": {
+    "vizwiz_vqa_val": {
+      "original": 4319,
+      "effective": 4319
+    }
+  },
+  "config": {
+    "model": "qwen2_5_vl",
+    "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+    "batch_size": "1",
+    "batch_sizes": [],
+    "device": null,
+    "use_cache": null,
+    "limit": null,
+    "offset": 0,
+    "bootstrap_iters": 100000,
+    "gen_kwargs": "",
+    "random_seed": 0,
+    "numpy_seed": 1234,
+    "torch_seed": 1234,
+    "fewshot_seed": 1234,
+    "resolved_cli_args": {
+      "config": "",
+      "model": "qwen2_5_vl",
+      "tasks": "vizwiz_vqa_val",
+      "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+      "launcher_args": null,
+      "num_fewshot": null,
+      "batch_size": "1",
+      "max_batch_size": null,
+      "device": null,
+      "output_path": "/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k64_rho0.5_lambda0.5",
+      "limit": null,
+      "offset": 0,
+      "use_cache": null,
+      "cache_requests": null,
+      "check_integrity": false,
+      "write_out": false,
+      "log_samples": true,
+      "wandb_log_samples": false,
+      "log_samples_suffix": "model_outputs",
+      "system_instruction": null,
+      "apply_chat_template": false,
+      "fewshot_as_multiturn": false,
+      "show_config": false,
+      "include_path": null,
+      "gen_kwargs": "",
+      "reasoning_tags": "[[\"<think>\", \"</think>\"], [\"<analysis>\", \"</analysis>\"]]",
+      "verbosity": "INFO",
+      "wandb_args": "",
+      "timezone": "Asia/Singapore",
+      "hf_hub_log_args": ",output_path=/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k64_rho0.5_lambda0.5",
+      "predict_only": false,
+      "seed": [
+        0,
+        1234,
+        1234,
+        1234
+      ],
+      "trust_remote_code": false,
+      "process_with_media": false,
+      "agentic_trace_mode": "basic",
+      "force_simple": false,
+      "tui": false,
+      "repeats": 1,
+      "baseline": null,
+      "max_tokens": null,
+      "power_analysis": false,
+      "effect_size": 0.03,
+      "alpha": 0.05,
+      "power": 0.8,
+      "correlation": 0.5,
+      "std_a": null,
+      "std_b": null
+    }
+  },
+  "git_hash": "8f86b55",
+  "git_branch": "main",
+  "lmms_eval_version": "main@8f86b55",
+  "date": "20260718_193258",
+  "throughput": {
+    "total_gen_tokens": 4095,
+    "total_elapsed_time": 1184.2450540065765,
+    "avg_speed": 3.4578991790133826,
+    "avg_rank": 0.0
+  },
+  "usage": {},
+  "efficiency": {
+    "by_task": {
+      "vizwiz_vqa_val": {
+        "docs": 4319.0,
+        "docs_with_token_counts": 4319.0,
+        "total_input_tokens": 0.0,
+        "total_output_tokens": 19661.0,
+        "total_tokens": 19661.0,
+        "total_correct_score": 2683.6000000000035,
+        "avg_output_tokens_per_sample": 4.552211159990739,
+        "tokens_per_correct_answer": 7.3263526606051474
+      }
+    },
+    "overall": {
+      "docs": 4319.0,
+      "docs_with_token_counts": 4319.0,
+      "total_input_tokens": 0.0,
+      "total_output_tokens": 19661.0,
+      "total_tokens": 19661.0,
+      "total_correct_score": 2683.6000000000035,
+      "avg_output_tokens_per_sample": 4.552211159990739,
+      "tokens_per_correct_answer": 7.3263526606051474
+    }
+  },
+  "task_hashes": {
+    "vizwiz_vqa_val": "357d3a3524157cf5221c4bde1944b5542a41170ed686ac3469d86de273c4dd92"
+  },
+  "model_source": "qwen2_5_vl",
+  "model_name": "/home/jk/models/qwen2.5-vl-7b",
+  "model_name_sanitized": "models__qwen2.5-vl-7b",
+  "system_instruction": null,
+  "system_instruction_sha": null,
+  "fewshot_as_multiturn": false,
+  "chat_template": null,
+  "chat_template_sha": null,
+  "start_time": 10969.111417514,
+  "end_time": 12291.966768459,
+  "total_evaluation_time_seconds": "1322.8553509450012"
+}

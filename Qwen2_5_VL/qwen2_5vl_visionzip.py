@@ -29,6 +29,7 @@
 # ------------------------------------------------------------------------
 
 import math
+import os
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Tuple, Union
 
@@ -72,6 +73,70 @@ else:
 
 
 logger = logging.get_logger(__name__)
+
+
+def _anchor_cover_rect(features, saliency, height, width, budget, rho=0.5,
+                       lam=0.5, cover_factor=3.0):
+    """Anchor-Cover on Qwen's post-PatchMerger rectangular NaViT grid.
+
+    Qwen has no CLS token.  ``saliency`` is the mean, over query positions
+    and heads, of the last full-attention block's attention received by each
+    merged patch.  The two pools otherwise follow idea4 unchanged: salient
+    spatial coverage followed by global feature-MMR.  Only original merger
+    outputs are gathered; no token reconstruction or merging is performed.
+    """
+    n = features.shape[0]
+    budget = max(1, min(int(budget), n))
+    rho = min(max(float(rho), 0.0), 1.0)
+    cover_n = min(budget, int(math.ceil(rho * budget)))
+    device = features.device
+    feats = F.normalize(features.float(), dim=-1)
+    sal = saliency.float()
+    sal = (sal - sal.min()) / (sal.max() - sal.min() + 1e-6)
+    yy, xx = torch.meshgrid(torch.arange(height, device=device),
+                            torch.arange(width, device=device), indexing="ij")
+    coords = torch.stack((yy.flatten(), xx.flatten()), dim=-1).float()
+    chosen = torch.zeros(n, dtype=torch.bool, device=device)
+    selected = []
+
+    if cover_n:
+        cells_n = min(n, max(cover_n, int(round(cover_factor * cover_n))))
+        anchors = [0]
+        nearest = torch.full((n,), float("inf"), device=device)
+        for _ in range(1, cells_n):
+            torch.minimum(nearest, (coords - coords[anchors[-1]]).square().sum(-1), out=nearest)
+            anchors.append(int(nearest.argmax()))
+        cells = torch.cdist(coords, coords[torch.tensor(anchors, device=device)]).argmin(-1)
+        reps, cell_sal = [], []
+        # A local 3x3 mean is a rectangular-grid analogue of idea4's
+        # low-frequency stability term and avoids assumptions about 24x24.
+        smooth = F.avg_pool2d(features.float().norm(dim=-1).view(1, 1, height, width),
+                              3, stride=1, padding=1).flatten()
+        stability = -(features.float().norm(dim=-1) - smooth).abs()
+        for cell in range(cells_n):
+            ids = (cells == cell).nonzero(as_tuple=True)[0]
+            centroid = F.normalize(feats[ids].mean(0), dim=0)
+            medoid = feats[ids] @ centroid
+            def norm(v):
+                return (v - v.min()) / (v.max() - v.min() + 1e-6)
+            score = norm(medoid) + norm(stability[ids]) + norm(sal[ids])
+            reps.append(ids[score.argmax()])
+            cell_sal.append(sal[ids].max())
+        top_cells = torch.stack(cell_sal).topk(cover_n).indices
+        for idx in torch.stack(reps)[top_cells]:
+            selected.append(idx)
+            chosen[idx] = True
+
+    max_red = torch.zeros(n, device=device)
+    for idx in selected:
+        torch.maximum(max_red, (feats @ feats[idx]).clamp_min(0), out=max_red)
+    while len(selected) < budget:
+        score = (sal - float(lam) * max_red).masked_fill(chosen, float("-inf"))
+        idx = score.argmax()
+        selected.append(idx)
+        chosen[idx] = True
+        torch.maximum(max_red, (feats @ feats[idx]).clamp_min(0), out=max_red)
+    return torch.stack(selected).sort().values
 
 _CONFIG_FOR_DOC = "Qwen2_5_VLConfig"
 
@@ -1912,60 +1977,41 @@ class Qwen2_5_VLForConditionalGeneration(Qwen2_5_VLPreTrainedModel, GenerationMi
                 position_ids = position_ids.add(delta)
                 position_ids = position_ids.unsqueeze(0).expand(3, -1, -1)
         if select_pixel:
-            
-            dominant_num = int(0.65 * attn_logits.size(0))
-            contextual_num = max(int(0.05 * attn_logits.size(0)),1)
-            topk_values, topk_indices = torch.topk(attn_logits, dominant_num)
-
-            mask = torch.zeros_like(attn_logits, dtype=torch.bool)
-            mask[topk_indices] = True  
-            contextual_mask = ~mask
-            metric_filtered = attn_key[:,contextual_mask]
-            metric_normalized = metric_filtered / metric_filtered.norm(dim=-1, keepdim=True) 
-            del attn_key, metric_filtered
-
-            ## Contextual Visual Tokens
-            step = max(1, metric_normalized.shape[1] // contextual_num)
-            target_indices = torch.arange(0, metric_normalized.shape[1], step, device=metric_normalized.device)[:contextual_num]
-            target_tokens = metric_normalized[:, target_indices, :]
-
-            tokens_to_merge = metric_normalized[:, ~torch.isin(torch.arange(metric_normalized.shape[1], device=metric_normalized.device), target_indices), :]
-            similarity = torch.bmm(tokens_to_merge, target_tokens.transpose(1, 2))
-            assign_one_hot = torch.zeros(tokens_to_merge.shape[0], tokens_to_merge.shape[1], contextual_num, dtype=attn_logits.dtype, device=metric_normalized.device)
-            assign_one_hot.scatter_(2, similarity.argmax(dim=2).unsqueeze(-1), 1)
-            counts = assign_one_hot.sum(dim=1).clamp(min=1).unsqueeze(-1)
-
-            select_mask = torch.zeros_like(attn_logits, dtype=torch.bool)
-            select_mask[topk_indices] = True
-
-            false_pos = (~select_mask).nonzero(as_tuple=True)[0]   
-
-            select_mask[false_pos[target_indices]] = True
-
-
-            img_mask = (input_ids == self.config.image_token_id)[0]  
-            st_idx = torch.nonzero(img_mask, as_tuple=True)[0]         
-
-            if st_idx.numel() > 0:
-                first, last = st_idx[0].item(), st_idx[-1].item()     
-                img_mask[first:last+1] = ~select_mask
-                img_mask = ~img_mask
-                contexual_input_idx = false_pos[target_indices]+first
-
-            hidden_states_filtered = inputs_embeds[:, first:last+1][:,contextual_mask]
-            hidden_to_merge = hidden_states_filtered[:, ~torch.isin(torch.arange(hidden_states_filtered.shape[1], device=hidden_states_filtered.device), target_indices), :]
-            aggregated_hidden = torch.bmm(assign_one_hot.transpose(1, 2), hidden_to_merge) / counts
-            target_hidden = hidden_states_filtered[:, target_indices, :]  
-            
-            contextual_tokens = target_hidden + aggregated_hidden
-
-
-
-            position_ids = position_ids[:,:,img_mask]
-            attention_mask = attention_mask[:, img_mask]
-            inputs_embeds[:,contexual_input_idx] =  contextual_tokens
-            inputs_embeds = inputs_embeds[:, img_mask]
-            del contextual_tokens, hidden_states_filtered, hidden_to_merge,aggregated_hidden
+            # lmms-eval image benchmarks use batch_size=1.  Apply idea4 to
+            # each image's post-merger grid, then gather the corresponding
+            # original image embeddings from the language-model sequence.
+            budget = int(os.environ.get("IDEA_QWEN_K", "192"))
+            rho = float(os.environ.get("IDEA_RHO", "0.5"))
+            lam = float(os.environ.get("IDEA_LAMBDA", "0.5"))
+            cover_factor = float(os.environ.get("IDEA_COVER_FACTOR", "3.0"))
+            merged_counts = (image_grid_thw[:, 0] * image_grid_thw[:, 1] * image_grid_thw[:, 2]
+                             // (self.visual.spatial_merge_size ** 2)).tolist()
+            keep_visual = []
+            offset = 0
+            for grid, count in zip(image_grid_thw, merged_counts):
+                t, h, w = (int(x) for x in grid.tolist())
+                if t != 1:
+                    raise ValueError("Anchor-Cover Qwen image evaluation expects temporal grid t=1")
+                gh, gw = h // self.visual.spatial_merge_size, w // self.visual.spatial_merge_size
+                ids = _anchor_cover_rect(attn_key[0, offset:offset + count],
+                                         attn_logits[offset:offset + count], gh, gw,
+                                         budget, rho, lam, cover_factor)
+                keep_visual.append(ids + offset)
+                offset += count
+            keep_visual = torch.cat(keep_visual)
+            image_positions = (input_ids[0] == self.config.image_token_id).nonzero(as_tuple=True)[0]
+            seq_keep = torch.ones(input_ids.shape[1], dtype=torch.bool, device=input_ids.device)
+            seq_keep[image_positions] = False
+            seq_keep[image_positions[keep_visual]] = True
+            position_ids = position_ids[:, :, seq_keep]
+            if attention_mask is not None:
+                attention_mask = attention_mask[:, seq_keep]
+            inputs_embeds = inputs_embeds[:, seq_keep]
+            # The prefill sequence just shrank; rebuild cache_position so it
+            # matches the pruned length (contiguous 0..M-1) instead of the
+            # original 0..N-1 that generate() prepared.
+            if cache_position is not None:
+                cache_position = torch.arange(inputs_embeds.shape[1], device=inputs_embeds.device)
 
 
 

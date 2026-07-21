@@ -1,0 +1,234 @@
+{
+  "results": {
+    "mme": {
+      "alias": "mme",
+      "mme_cognition_score,none": 594.2857142857142,
+      "mme_cognition_score_stderr,none": "N/A",
+      "mme_cognition_score_stderr_clt,none": 0.024300546332438985,
+      "mme_cognition_score_stderr_clustered,none": "N/A",
+      "mme_perception_score,none": 1653.484593837535,
+      "mme_perception_score_stderr,none": "N/A",
+      "mme_perception_score_stderr_clt,none": 0.007121051185061911,
+      "mme_perception_score_stderr_clustered,none": "N/A"
+    }
+  },
+  "group_subtasks": {
+    "mme": []
+  },
+  "configs": {
+    "mme": {
+      "task": "mme",
+      "dataset_path": "lmms-lab/MME",
+      "dataset_kwargs": {
+        "token": true
+      },
+      "test_split": "test",
+      "full_docs": false,
+      "process_results_use_image": false,
+      "doc_to_visual": "<function mme_doc_to_visual at 0x71d1a348f640>",
+      "doc_to_text": "<function mme_doc_to_text at 0x71d1c57b7520>",
+      "doc_to_target": "answer",
+      "process_results": "<function mme_process_results at 0x71d1c57e4310>",
+      "description": "",
+      "target_delimiter": " ",
+      "fewshot_delimiter": "\n\n",
+      "num_fewshot": 0,
+      "metric_list": [
+        {
+          "metric": "mme_perception_score",
+          "aggregation": "<function mme_aggregate_results at 0x71d1c57e4820>",
+          "higher_is_better": true
+        },
+        {
+          "metric": "mme_cognition_score",
+          "aggregation": "<function mme_aggregate_results at 0x71d1c57e4ca0>",
+          "higher_is_better": true
+        }
+      ],
+      "output_type": "generate_until",
+      "generation_kwargs": {
+        "max_new_tokens": 16,
+        "temperature": 0.0,
+        "top_p": 1.0,
+        "num_beams": 1,
+        "do_sample": false,
+        "until": [
+          "\n\n"
+        ]
+      },
+      "repeats": 1,
+      "should_decontaminate": false,
+      "score_key": "score",
+      "metadata": [
+        {
+          "version": 0.0
+        }
+      ],
+      "lmms_eval_specific_kwargs": {
+        "default": {
+          "pre_prompt": "",
+          "post_prompt": "\nAnswer the question using a single word or phrase."
+        },
+        "gpt4v": {
+          "pre_prompt": "",
+          "post_prompt": "\nAnswer the question with Yes or No."
+        },
+        "qwen_vl": {
+          "pre_prompt": "",
+          "post_prompt": " Answer:"
+        },
+        "otterhd": {
+          "pre_prompt": "",
+          "post_prompt": " Answer:"
+        },
+        "xcomposer2_4khd": {
+          "pre_prompt": "[UNUSED_TOKEN_146]user\n",
+          "post_prompt": " Answer this question briefly[UNUSED_TOKEN_145]\n[UNUSED_TOKEN_146]assistant\n"
+        },
+        "plm": {
+          "pre_prompt": "",
+          "post_prompt": ""
+        },
+        "pre_prompt": "",
+        "post_prompt": "\nAnswer the question using a single word or phrase."
+      }
+    }
+  },
+  "versions": {
+    "mme": "Yaml"
+  },
+  "n-shot": {
+    "mme": 0
+  },
+  "higher_is_better": {
+    "mme": {
+      "mme_perception_score": true,
+      "mme_cognition_score": true
+    }
+  },
+  "n-samples": {
+    "mme": {
+      "original": 2374,
+      "effective": 2374
+    }
+  },
+  "config": {
+    "model": "qwen2_5_vl",
+    "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+    "batch_size": "1",
+    "batch_sizes": [],
+    "device": null,
+    "use_cache": null,
+    "limit": null,
+    "offset": 0,
+    "bootstrap_iters": 100000,
+    "gen_kwargs": "",
+    "random_seed": 0,
+    "numpy_seed": 1234,
+    "torch_seed": 1234,
+    "fewshot_seed": 1234,
+    "resolved_cli_args": {
+      "config": "",
+      "model": "qwen2_5_vl",
+      "tasks": "mme",
+      "model_args": "pretrained=/home/jk/models/qwen2.5-vl-7b,attn_implementation=eager",
+      "launcher_args": null,
+      "num_fewshot": null,
+      "batch_size": "1",
+      "max_batch_size": null,
+      "device": null,
+      "output_path": "/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k64_rho0.5_lambda0.5",
+      "limit": null,
+      "offset": 0,
+      "use_cache": null,
+      "cache_requests": null,
+      "check_integrity": false,
+      "write_out": false,
+      "log_samples": true,
+      "wandb_log_samples": false,
+      "log_samples_suffix": "model_outputs",
+      "system_instruction": null,
+      "apply_chat_template": false,
+      "fewshot_as_multiturn": false,
+      "show_config": false,
+      "include_path": null,
+      "gen_kwargs": "",
+      "reasoning_tags": "[[\"<think>\", \"</think>\"], [\"<analysis>\", \"</analysis>\"]]",
+      "verbosity": "INFO",
+      "wandb_args": "",
+      "timezone": "Asia/Singapore",
+      "hf_hub_log_args": ",output_path=/home/jk/work/paper/VisionZip/docs/idea4/qwen2_5_vl_idea4_k64_rho0.5_lambda0.5",
+      "predict_only": false,
+      "seed": [
+        0,
+        1234,
+        1234,
+        1234
+      ],
+      "trust_remote_code": false,
+      "process_with_media": false,
+      "agentic_trace_mode": "basic",
+      "force_simple": false,
+      "tui": false,
+      "repeats": 1,
+      "baseline": null,
+      "max_tokens": null,
+      "power_analysis": false,
+      "effect_size": 0.03,
+      "alpha": 0.05,
+      "power": 0.8,
+      "correlation": 0.5,
+      "std_a": null,
+      "std_b": null
+    }
+  },
+  "git_hash": "8f86b55",
+  "git_branch": "main",
+  "lmms_eval_version": "main@8f86b55",
+  "date": "20260718_111803",
+  "throughput": {
+    "total_gen_tokens": 682,
+    "total_elapsed_time": 156.71074652671814,
+    "avg_speed": 4.351967016401926,
+    "avg_rank": 0.0
+  },
+  "usage": {},
+  "efficiency": {
+    "by_task": {
+      "mme": {
+        "docs": 2374.0,
+        "docs_with_token_counts": 2374.0,
+        "total_input_tokens": 0.0,
+        "total_output_tokens": 4790.0,
+        "total_tokens": 4790.0,
+        "total_correct_score": 2067.0,
+        "avg_output_tokens_per_sample": 2.0176916596461667,
+        "tokens_per_correct_answer": 2.31736816642477
+      }
+    },
+    "overall": {
+      "docs": 2374.0,
+      "docs_with_token_counts": 2374.0,
+      "total_input_tokens": 0.0,
+      "total_output_tokens": 4790.0,
+      "total_tokens": 4790.0,
+      "total_correct_score": 2067.0,
+      "avg_output_tokens_per_sample": 2.0176916596461667,
+      "tokens_per_correct_answer": 2.31736816642477
+    }
+  },
+  "task_hashes": {
+    "mme": "57a563a0eb8e69e609dd1256bfb43c881ea2e05ea8a2d972a4a99529653d184a"
+  },
+  "model_source": "qwen2_5_vl",
+  "model_name": "/home/jk/models/qwen2.5-vl-7b",
+  "model_name_sanitized": "models__qwen2.5-vl-7b",
+  "system_instruction": null,
+  "system_instruction_sha": null,
+  "fewshot_as_multiturn": false,
+  "chat_template": null,
+  "chat_template_sha": null,
+  "start_time": 1935.946868568,
+  "end_time": 2162.968035593,
+  "total_evaluation_time_seconds": "227.02116702500007"
+}
