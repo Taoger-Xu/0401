@@ -1,0 +1,3 @@
+Image ID: n369595
+Question: On which side of the image is the tall person?
+Answer: right
