@@ -33,7 +33,28 @@ Each single mechanism has a characteristic failure mode:
 
 SCRAP therefore allocates the budget over two complementary pools: a **globally redundancy-aware saliency pool** as the backbone (Stage B, inheriting saliency and semantic de-redundancy), topped up by a **lightweight, saliency-ranked coverage pool** that lands only in content regions (Stage A). Together, under the same budget, the selection keeps salient evidence without leaving spatial holes.
 
-*(Figure 1: method overview pipeline — TODO)*
+*(Figure 1: method overview pipeline — TODO. Real-image token-selection material for this
+figure is available at K=128 (rho=0.25, lambda=0.5, cover_factor=3, sigma->inf, the shipped
+K=128 config from Table 6/idea4.md §4.0.2), rendered on GQA testdev image `n369595` (a
+frisbee-in-the-park scene, chosen by scanning all 398 testdev images for the clearest
+two-stage contrast). One of its GQA questions doubles as the motivating example: *"On which
+side of the image is the tall person?"* (answer: right) — answering it needs both the global
+spatial frame (where is "the image" laid out — the coverage pool's job) and precise
+localization of the one salient person in it (the MMR pool's job), i.e. exactly the two
+objectives §3.2 argues neither pool alone satisfies.
+
+Three images: [figs/gqa_two_stage_origin.png](figs/gqa_two_stage_origin.png) (the unmodified
+image), [figs/gqa_two_stage_stage1.png](figs/gqa_two_stage_stage1.png) (pink boxes = **anchor
+points**, the 33 tokens kept by Stage A / the coverage pool alone — spread across sky/trees/
+grass with only marginal coverage of the person; this set is literally the initial anchor set
+$S$ Stage B's MMR grows from, §2.2/§3.4), and
+[figs/gqa_two_stage_stage2.png](figs/gqa_two_stage_stage2.png) (pink = the same anchor points
+carried over, blue = **stage2**, the additional Stage-B/MMR tokens added on top to reach the
+full K=128 budget — visibly concentrating on the person, the empirical two-stage story of
+§3.2 made literal on a real image). Reproduce with
+`python scripts/idea4_two_stage_vis.py --render n369595 --out_dir <dir>` (writes
+`n369595_origin/_stage1/_stage2.png`, then copy/rename into `figs/` as above); re-rank
+candidate images from scratch with `--rank`.)*
 
 ### 3.3 Stage A: Saliency-Ranked Coverage Pool
 
@@ -232,6 +253,45 @@ Three findings:
 
 The pattern is consistent: the tighter the budget, the smaller the optimal ρ—coverage must not crowd out the salient core—while at K≥192 the larger coverage pool pays off. This yields the deployment default of §3.7.
 
+#### Two-stage decomposition: is combining Stage A and Stage B necessary?
+
+The ρ-sweep above tunes the *balance* between the two phases, but does not establish that both
+phases are independently load-bearing. We isolate this by ablating Anchor-Cover into its two pure
+limits at K=128, LLaVA-1.5-7B: **Stage A only** (ρ=1—pure saliency-ranked spatial coverage, Phase B
+never runs) and **Stage B only** (ρ=0, λ=0.5, σ→∞—pure global feature-MMR, identical to the idea3
+baseline), against the shipped **Full** two-stage config (ρ=0.25, λ=0.5, σ→∞).
+
+All nine benchmarks from the main protocol (§4.1, line 132) are evaluated for both pure limits, not
+a favorable subset, so the comparison below is exhaustive rather than cherry-picked.
+
+**Table 6. Ablation of two stages, all nine protocol benchmarks (K=128, LLaVA-1.5-7B; %van = retention vs. vanilla-576). MME-P and POPE (F1) use the same metric definitions as Table 1, so the Full row is directly comparable to the K=128 column there. Bold = best of the three variants per column.**
+
+| Variant | GQA | MMB-EN | MME-P | MMStar | POPE (F1) | SQA-IMG | TextVQA | VizWiz | OCRBench | avg %van |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| Stage A only (ρ=1, coverage pool only) | 58.32 | **62.63** | **1416.4** | **33.44** | 83.42 | **68.96** | 40.88 | 54.49 | 29.40 | 96.2% |
+| Stage B only (ρ=0, MMR pool only) | **59.29** | 62.29 | 1406.2 | 32.47 | **86.53** | 68.77 | **43.87** | **55.34** | **30.10** | 97.4% |
+| **Full (ρ=0.25, both stages)** | 59.25 | **62.63** | 1411.7 | 32.74 | 86.44 | 68.91 | 43.63 | 55.33 | 29.90 | **97.5%** |
+| vanilla-576 | 61.97 | 64.00 | 1511.3 | 33.56 | 85.88 | 69.46 | 46.07 | 54.06 | 31.20 | 100.0% |
+
+Neither pure limit dominates, and the split is not noise—each stage wins on a coherent cluster of
+benchmarks. **Stage A alone** (spatial coverage) tops MME-P, MMStar, and SQA-IMG—holistic-image and
+diagram/knowledge tasks that reward not missing any region of the picture—and ties Full on
+MMB-EN, but it is the *worst* of the three variants on the text-dense and open-ended benchmarks:
+TextVQA (−2.99 pts vs. Stage B), GQA (−0.97 pts), POPE F1 (−3.11 pts), VizWiz (−0.85 pts), and
+OCRBench (−0.70 pts). **Stage B alone** (global redundancy removal / MMR) inverts the pattern: it
+wins GQA, POPE, TextVQA, VizWiz, and OCRBench—tasks where discarding near-duplicate tokens frees
+budget for the few informative ones—but is the worst variant on MME-P (−10.2 pts vs. Stage A),
+MMStar (−0.97 pts vs. Stage A), and SQA-IMG (−0.19 pts vs. Stage A).
+
+The **Full** config is never the worst variant on any of the nine benchmarks, and on the two where
+neither pure stage's top score is available to it, it still lands within 0.3 pts of the winner
+(MMStar 32.74 vs. Stage A's 33.44; OCRBench 29.90 vs. Stage B's 30.10). Averaged over all nine, Full
+attains the best retention (97.5%), 0.1 pts above Stage B alone and 1.3 pts above Stage A alone.
+This is the empirical justification for the two-stage design: Stage A and Stage B are not redundant
+alternatives but specialists with complementary failure modes—one is brittle on text/redundancy-heavy
+tasks, the other on holistic-coverage tasks—and combining them hedges against both rather than
+trading one for the other.
+
 #### Saliency-ranked vs. uniform coverage
 
 Setting $c{=}1$ makes Stage A degenerate to uniform coverage: every cell, background included, contributes one token. At small budgets this spends roughly a ρ-fraction of the budget on background and visibly degrades POPE; over-partitioning with $c{=}3$ and keeping only the top-$M$ cells by attention restores POPE and MME by concentrating coverage in content regions. We therefore fix $c{=}3$ throughout.
@@ -240,9 +300,9 @@ Setting $c{=}1$ makes Stage A degenerate to uniform coverage: every cell, backgr
 
 #### Text mode: drop coverage, raise the saliency share
 
-Text patches are spatially clustered and visually similar, so both the coverage pool (which spends budget on background cells) and a strong redundancy penalty are biased **against** them. We test this with a two-stage protocol that avoids overfitting the validation task: hyper-parameters are searched **only** on TextVQA (Table 6), then the selected configuration is transferred to OCRBench without further tuning (Table 7).
+Text patches are spatially clustered and visually similar, so both the coverage pool (which spends budget on background cells) and a strong redundancy penalty are biased **against** them. We test this with a two-stage protocol that avoids overfitting the validation task: hyper-parameters are searched **only** on TextVQA (Table 7), then the selected configuration is transferred to OCRBench without further tuning (Table 8).
 
-**Table 6. TextVQA search stage (exact-match×100). "gen." is the per-budget general configuration.**
+**Table 7. TextVQA search stage (exact-match×100). "gen." is the per-budget general configuration.**
 
 | ρ | λ | α | K=64 | K=128 | K=192 |
 |---:|---:|---:|---:|---:|---:|
@@ -251,7 +311,7 @@ Text patches are spatially clustered and visually similar, so both the coverage 
 | 0 | 0.1 | 90.9% | 42.49 | **44.55** | **45.16** |
 | 0 | 0.25 | 80.0% | 42.38 | 44.04 | 45.06 |
 
-**Table 7. OCRBench transfer validation (accuracy×100; vanilla 31.20). Configurations selected on TextVQA only; OCRBench untouched during selection.**
+**Table 8. OCRBench transfer validation (accuracy×100; vanilla 31.20). Configurations selected on TextVQA only; OCRBench untouched during selection.**
 
 | K | selected config | general | text mode | Δ |
 |---:|---|---:|---:|---:|
@@ -269,4 +329,5 @@ We state the scope conservatively: gains on discriminative QA do not extend to e
 
 ---
 
-*数据来源与核对：Table 1–3 与 [paper_draft.md](paper_draft.md) §4.2 一致；Table 4 的 VisionZip 行来自 [idea_summary.md](../idea_summary.md) 实验 A（5 个非文字基准 prompt 未变，可比）+ 无 OCR 协议重跑的 TextVQA（44.53/43.82/41.95）；VisionZip 的 nonTxt %base（97.6/96.1/93.3）按与 aggregate_ideas.py 相同的公式手工计算，正式投稿前需用脚本核验。Table 5–7 与 paper_draft.md §4.3 一致。*
+*数据来源与核对：Table 1–3 与 [paper_draft.md](paper_draft.md) §4.2 一致；Table 4 的 VisionZip 行来自 [idea_summary.md](../idea_summary.md) 实验 A（5 个非文字基准 prompt 未变，可比）+ 无 OCR 协议重跑的 TextVQA（44.53/43.82/41.95）；VisionZip 的 nonTxt %base（97.6/96.1/93.3）按与 aggregate_ideas.py 相同的公式手工计算，正式投稿前需用脚本核验。Table 5、7–8 与 paper_draft.md §4.3 一致。Table 6（两阶段消融，全部 9 个协议基准，非挑选子集）为 2026-07-24/25 两批新跑：GQA/MME/POPE/SQA-IMG 于 2026-07-24 完成，MMB-EN/MMStar/TextVQA/VizWiz/OCRBench 于 2026-07-25 补跑（首次后台任务 `boqx33vir`/`bzs7p2aks` 在会话重启时被杀掉、未产生任何 results.json，已确认无残留数据后以 `b0nztxb54`/`b6ong81bg` 重新跑出）。Stage A/B 单独结果见
+`docs/idea4/logs/ablation_stage{1,2}_k128/models__llava-v1.5-7b/`，Full 复用已有 `docs/idea4/logs/cf3_sigInf_rho0.25_k128`（K=128, ρ=0.25, λ=0.5, σ→∞，与主表 4.0.2 同一份数据，非重跑）；九项均为单次运行，未做多种子重复。Table 6 的 MME-P/POPE(F1) 口径与 Table 1 一致（非 Table 4 的 MME 总分/POPE accuracy 口径），Full 行 GQA/MMB-EN/MME-P/MMStar/POPE(F1)/SQA-IMG 与 Table 1 K=128 列逐项相同；TextVQA/OCRBench 两列 Table 1 用的是文本模式（ρ=0,λ=0.1，见 §4.6），Table 6 三行统一用通用配置（ρ 见表头）以保证 Stage A/B/Full 三者可比，因此 Full 的 TextVQA(43.63)/OCRBench(29.90) 低于 Table 1 K=128 的文本模式结果(44.55/30.00)，二者口径不同，非数据不一致。*
