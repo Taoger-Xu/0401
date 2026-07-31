@@ -1,0 +1,65 @@
+[
+  {
+    "name": "GQA",
+    "question": "What color are the pants?",
+    "answer": "Red",
+    "log": "20260708_211340_samples_gqa.jsonl",
+    "doc_id": 7
+  },
+  {
+    "name": "MMBench-EN",
+    "question": "is this place crowded?",
+    "answer": "A. yes",
+    "log": "20260708_211340_samples_mmbench_en_dev.jsonl",
+    "doc_id": 54
+  },
+  {
+    "name": "MME-P",
+    "question": "Does this artwork belong to the type of religious? Please answer yes or no.",
+    "answer": "Yes",
+    "log": "20260708_211340_samples_mme.jsonl",
+    "doc_id": 40
+  },
+  {
+    "name": "MMStar",
+    "question": "What is happening in the image?\nOptions: A: A group of men are playing soccer on a field., B: A football player is kicking a ball., C: A soccer player is practicing ball control at the stadium., D: An Olympic athlete is competing in a soccer match.",
+    "answer": "A. A group of men are playing soccer on a field.",
+    "log": "20260716_163900_samples_mmstar.jsonl",
+    "doc_id": 27
+  },
+  {
+    "name": "POPE",
+    "question": "Is there a person in the image?",
+    "answer": "Yes",
+    "log": "20260708_211340_samples_pope.jsonl",
+    "doc_id": 2
+  },
+  {
+    "name": "ScienceQA-IMG",
+    "question": "What is the name of the colony shown?",
+    "answer": "B. New Hampshire",
+    "log": "20260708_211340_samples_scienceqa_img.jsonl",
+    "doc_id": 1
+  },
+  {
+    "name": "TextVQA",
+    "question": "what brand liquor is on the right?",
+    "answer": "Bowmore",
+    "log": "20260708_211340_samples_textvqa_val.jsonl",
+    "doc_id": 3
+  },
+  {
+    "name": "VizWiz",
+    "question": "What is the title of this book? ",
+    "answer": "Dog Years",
+    "log": "20260714_174622_samples_vizwiz_vqa_val.jsonl",
+    "doc_id": 2
+  },
+  {
+    "name": "OCRBench",
+    "question": "what is written in the image?",
+    "answer": "The image reads \"Market.\"",
+    "log": "20260714_174622_samples_ocrbench.jsonl",
+    "doc_id": 4
+  }
+]
